@@ -28,20 +28,12 @@ const connectToDatabase = async () => {
   console.log("Connecting to MongoDB...");
 
   try {
-    const db = await mongoose.connect(MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      bufferCommands: false,
-      serverSelectionTimeoutMS: 30000,
-      socketTimeoutMS: 45000,
-      connectTimeoutMS: 30000,
-    });
+    const db = await mongoose.connect(MONGODB_URI);
     cachedDb = db;
     console.log("MongoDB connected successfully");
     return db;
   } catch (error) {
     console.error("MongoDB connection error:", error.message);
-    console.error("Error code:", error.code);
     throw error;
   }
 };
