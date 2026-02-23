@@ -2,6 +2,10 @@ const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+// Fallback secret for development - set this in Vercel environment variables
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your-super-secret-key-change-in-production";
+
 exports.register = async (req, res) => {
   const { name, email, password } = req.body;
   try {
@@ -12,7 +16,7 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, password: hashedPassword });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user._id }, JWT_SECRET, {
       expiresIn: "1h",
     });
 
@@ -35,7 +39,7 @@ exports.login = async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user._id }, JWT_SECRET, {
       expiresIn: "1h",
     });
 
