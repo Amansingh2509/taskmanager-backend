@@ -16,27 +16,32 @@ let cachedDb = null;
 const connectToDatabase = async () => {
   // If we have a cached connection, use it
   if (cachedDb && mongoose.connection.readyState === 1) {
+    console.log("Using cached MongoDB connection");
     return cachedDb;
   }
 
-  // MongoDB connection string
+  // MongoDB connection string - Added database name 'taskmanager'
   const MONGODB_URI =
     process.env.MONGODB_URI ||
-    "mongodb+srv://Amantask:Aman814128@cluster0.prllcn8.mongodb.net/?retryWrites=true&w=majority";
+    "mongodb+srv://Amantask:Aman814128@cluster0.prllcn8.mongodb.net/taskmanager?retryWrites=true&w=majority";
+
+  console.log("Connecting to MongoDB...");
 
   try {
     const db = await mongoose.connect(MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      bufferCommands: false, // Disable buffering
-      serverSelectionTimeoutMS: 10000, // Timeout after 10s
+      bufferCommands: false,
+      serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
+      connectTimeoutMS: 30000,
     });
     cachedDb = db;
     console.log("MongoDB connected successfully");
     return db;
   } catch (error) {
     console.error("MongoDB connection error:", error.message);
+    console.error("Error code:", error.code);
     throw error;
   }
 };
@@ -51,13 +56,11 @@ app.get("/api/health", async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        status: "error",
-        database: "disconnected",
-        message: error.message,
-      });
+    res.status(500).json({
+      status: "error",
+      database: "disconnected",
+      message: error.message,
+    });
   }
 });
 
@@ -67,7 +70,9 @@ app.use(async (req, res, next) => {
     await connectToDatabase();
     next();
   } catch (error) {
-    res.status(500).json({ message: "Database connection failed" });
+    res
+      .status(500)
+      .json({ message: "Database connection failed: " + error.message });
   }
 });
 
